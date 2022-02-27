@@ -9,6 +9,9 @@ fn main() {
     game.load("./game/data");
 
     game.step();
+    game.step();
+    game.step();
+    game.step();
 
-    println!("Hello, world!{:?}", game);
+    println!("Hello, world!{}", game);
 }

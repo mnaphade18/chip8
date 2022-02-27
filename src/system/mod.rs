@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::Read;
+use std::fmt;
 extern crate rand;
 
 mod instructions;
@@ -17,14 +18,20 @@ pub struct System {
     delay_timer: u8,
 }
 
+impl fmt::Display for System {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.registers)
+    }
+}
 
 impl System {
     pub fn new() -> Self {
         let mut system = System {
-            memory: Vec::with_capacity(4096),
-            program_counter: 0x00,
+            //memory: Vec::with_capacity(4096),
+            memory: vec![0u8; 4096],
+            program_counter: 0x200,
             //registers: Vec::with_capacity(16),
-            registers: (0..16).collect(),
+            registers: vec![0; 16],
             index_register: 0,
             stack: Vec::with_capacity(16),
             stack_pointer: 0,
@@ -32,7 +39,9 @@ impl System {
             delay_timer: 0,
         };
 
-        system.memory.copy_from_slice(sprites::fonts);
+        // system.memory.extend_from_slice(&sprites::FONTS);
+        system.memory.splice(0..80, sprites::FONTS);
+
 
         return system;
     }
@@ -40,12 +49,13 @@ impl System {
     pub fn load(&mut self, game_path: &str) {
         let file = File::open(game_path).unwrap();
 
-        let game_data = Vec::new();
+        let mut game_data = Vec::new();
         for data in file.bytes() {
             let value = data.unwrap();
             game_data.push(value);
         }
-        self.memory[0x200..].copy_from_slice(&game_data);
+        let length = 512 + game_data.len();
+        self.memory[0x200..length].copy_from_slice(&game_data);
     }
     fn fetch(&self) -> u16 {
         let pc = self.program_counter as usize;
@@ -118,6 +128,8 @@ impl System {
             }
             "LOAD" => {
                 self.registers[arguments[0] as usize] = arguments[1] as u8;
+
+                println!("{:?}", self.registers);
                 self.increment_program_counter();
             }
             "ADD_REG_MEM" => {
@@ -150,7 +162,7 @@ impl System {
 
                 //TODO: impletemnt iverflow register
 
-                println!("{:?}", self.registers);
+                println!("ADD::{:?}", self.registers);
 
             }
             "SUBTRACT" => {

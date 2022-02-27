@@ -322,5 +322,6 @@ pub fn dissassemble(opcode: u16) -> (Instruction, Vec<u16>) {
     let instruction = INSTRUCTIONS.iter().find(|i| (opcode & i.mask) == i.pattern ).unwrap();
     let arguments: Vec<u16> = instruction.arguments.iter().map(|a| (opcode & a.mask) >> a.shift).collect();
 
+    println!("INSTRUCITON::{:?}\n argumnets:::{:?}", instruction, arguments);
     (instruction.clone(), arguments)
 }
