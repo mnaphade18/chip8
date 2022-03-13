@@ -1,26 +1,31 @@
-use std::fs::File;
-use std::io::Read;
-use std::fmt;
 extern crate rand;
-
+mod display;
 mod instructions;
 mod sprites;
+mod keyboard;
 
-#[derive(Debug)]
+use std::fs::File;
+use std::io::{ Read };
+use std::fmt;
+use display::Display;
+use keyboard::Keyboard;
+
 pub struct System {
     memory: Vec<u8>,
     program_counter: u16,
     registers: Vec<u8>,
-    index_register: u8,
+    index_register: u16,
     stack: Vec<u16>,
     stack_pointer: u8,
     sound_timer: u8,
     delay_timer: u8,
+    display: Display,
+    keyboard: Keyboard,
 }
 
 impl fmt::Display for System {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self.registers)
+        write!(f, "Register:\n{:?}\nmemory\n{:?}", self.registers, self.memory)
     }
 }
 
@@ -37,6 +42,8 @@ impl System {
             stack_pointer: 0,
             sound_timer: 0,
             delay_timer: 0,
+            display: Display::new(),
+            keyboard: Keyboard::new(),
         };
 
         // system.memory.extend_from_slice(&sprites::FONTS);
@@ -75,9 +82,16 @@ impl System {
     }
 
     fn execute(&mut self, instruction: instructions::Instruction, arguments: Vec<u16>) {
+
+        let key = self.keyboard.get_key();
+
+        if let Some(k) = key {
+            println!("{:?}, {:?}", arguments, instruction);
+        }
+
         match instruction.name {
             "CLS" => {
-                println!("\033c");
+                self.display.clear();
                 self.increment_program_counter();
             }
             "RETURN" => {
@@ -85,10 +99,10 @@ impl System {
                 self.program_counter = program_counter;
                 self.stack_pointer -= 1;
             }
-            "JUMP_ADDR" => {
+            "JUMP" => {
                 self.program_counter = arguments[0];
             }
-            "CALL_ADDR" => {
+            "CALL" => {
                 self.stack_pointer += 1;
                 self.stack.push(self.program_counter);
                 self.program_counter = arguments[0]
@@ -128,8 +142,6 @@ impl System {
             }
             "LOAD" => {
                 self.registers[arguments[0] as usize] = arguments[1] as u8;
-
-                println!("{:?}", self.registers);
                 self.increment_program_counter();
             }
             "ADD_REG_MEM" => {
@@ -155,15 +167,8 @@ impl System {
             "ADD" => {
                 self.registers[arguments[0] as usize] += self.registers[arguments[1] as usize];
                 self.increment_program_counter();
-                // let register_1 = self.registers.get(arguments[1] as usize).unwrap().clone();
-                // let register_0 = self.registers.get_mut(arguments[0] as usize).unwrap();
-
-                // *register_0 += register_1;
 
                 //TODO: impletemnt iverflow register
-
-                println!("ADD::{:?}", self.registers);
-
             }
             "SUBTRACT" => {
                 self.registers[arguments[0] as usize] -= self.registers[arguments[1] as usize];
@@ -193,9 +198,7 @@ impl System {
                 }
             }
             "LOAD_INDEX" => {
-                let register = self.registers[arguments[0] as usize];
-
-                self.memory[arguments[1] as usize] = register;
+                self.index_register = arguments[0] as u16;
                 self.increment_program_counter();
             }
             "JUMP_REG_ADDR" => {
@@ -206,10 +209,21 @@ impl System {
                 let random_number: u8 = rand::random();
 
                 self.registers[arguments[0] as usize] = random_number & arguments[1] as u8;
+                //println!("RANDOM: {}, 0: {}, 1: {}",random_number, arguments[0], arguments[1]);
                 self.increment_program_counter();
             }
-            "DRAW" => {}
+            "DRAW" => {
+                let range = std::ops::Range { start: self.index_register as usize, end: (self.index_register + arguments[2]) as usize };
+                let lines = &self.memory[range];
+
+                let x = self.registers[arguments[0] as usize] +1;
+                let y = self.registers[arguments[1] as usize] +1;
+
+                self.display.draw(lines, x.into(), y.into());
+                self.increment_program_counter();
+            }
             "SKIP_KEY_EQ" => {
+                // TOOD setup input
                 let key = 0u8;
                 if self.registers[arguments[0] as usize] == key {
                     self.increment_program_counter();
@@ -219,6 +233,7 @@ impl System {
                 }
             }
             "SKIP_KEY_NEQ" => {
+                // TOOD setup input
                 let key = 0u8;
                 if self.registers[arguments[0] as usize] != key {
                     self.increment_program_counter();
@@ -233,6 +248,7 @@ impl System {
                 self.increment_program_counter();
             }
             "WAIT_KEY" => {
+                // TOOD setup input
                 let key = 0u8; //Wait for key
 
                 self.registers[arguments[0] as usize] = key;
@@ -247,11 +263,11 @@ impl System {
                 self.increment_program_counter();
             }
             "ADD_INDEX" => {
-                self.index_register += self.registers[arguments[0] as usize];
+                self.index_register += self.registers[arguments[0] as usize] as u16;
                 self.increment_program_counter();
             }
             "LOAD_SPRITE" => {
-                self.index_register = self.registers[arguments[0] as usize] * 5;
+                self.index_register = self.registers[arguments[0] as usize] as u16 * 5;
                 self.increment_program_counter();
             }
             "LOAD_BCD" => {

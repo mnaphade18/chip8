@@ -200,7 +200,7 @@ pub const RANDOM_REG: Instruction = Instruction {
     name: "RANDOM_REG", 
     mask: 0xf000, 
     pattern: 0xC000,
-    arguments: JUMP_ARGUMENTS,
+    arguments: LOAD_ARGUMENTS,
 };
 
 const DRAW_ARGUMENTS: [Argument; 3] = [
@@ -322,6 +322,6 @@ pub fn dissassemble(opcode: u16) -> (Instruction, Vec<u16>) {
     let instruction = INSTRUCTIONS.iter().find(|i| (opcode & i.mask) == i.pattern ).unwrap();
     let arguments: Vec<u16> = instruction.arguments.iter().map(|a| (opcode & a.mask) >> a.shift).collect();
 
-    println!("INSTRUCITON::{:?}\n argumnets:::{:?}", instruction, arguments);
+    //println!("{}:::INSTRUCITON::{:?}\n argumnets:::{:?}",opcode, instruction, arguments);
     (instruction.clone(), arguments)
 }
