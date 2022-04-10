@@ -287,16 +287,16 @@ pub const LOAD_SPRITE: Instruction =  Instruction {
 };
 
 pub const LOAD_BCD: Instruction =  Instruction {
-    id: "LOAD_BCD",
-    name: "LOAD_BCD_VX",
+    id: "LOAD_BCD_VX",
+    name: "LOAD_BCD",
     mask: 0xf0ff,
     pattern: 0xF033,
     arguments: KEY_ARGUMENT,
 };
 
 pub const LOAD_MEMORY: Instruction =  Instruction {
-    id: "LOAD_MEMORY",
-    name: "LOAD_MEMORY_VX",
+    id: "LOAD_MEMORY_VX",
+    name: "LOAD_MEMORY",
     mask: 0xf0ff,
     pattern: 0xF055,
     arguments: KEY_ARGUMENT,
