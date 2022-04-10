@@ -90,6 +90,7 @@ impl System {
         if let Some(quit) = input {
             if quit == 0xFF {
                 println!("Pressing p quits the program");
+
                 return true;
             }
         }
@@ -377,9 +378,9 @@ impl System {
 
     pub fn step(&mut self) -> bool {
         let opcode = self.fetch();
+        println!("{:?}", opcode);
         let ( instruction, arguments ) = self.decode(opcode);
 
-        // println!("{:?}{:?}", instruction, arguments);
         self.execute(instruction, arguments)
     }
 }
