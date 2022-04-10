@@ -1,20 +1,28 @@
 // Resolution: 64 x 32
 mod system;
+mod clock;
 use system::System;
+use clock::init_clock;
+use std::env;
 
 fn main() {
-    let mut game = System::new();
+    let mut rom = "./game/chip8";
 
-    game.load("./game/chip8");
+    let args: Vec<String> = env::args().collect();
 
-    let mut i = 0;
-
-    println!("Starting game");
-    loop {
-        //if i > 6 { break; }
-        game.step();
-        i += 1;
+    if args.len() > 1 {
+        rom = &args[1];
     }
 
-    // println!("Hello, world!{}", game);
+    let mut game = System::new();
+    game.load(rom);
+
+    let (rx, _thread) = init_clock();
+
+    loop {
+        rx.recv().unwrap();
+        if game.step() {
+            break
+        }
+    }
 }
