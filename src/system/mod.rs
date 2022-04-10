@@ -63,6 +63,8 @@ impl System {
         }
         let length = 512 + game_data.len();
         self.memory[0x200..length].copy_from_slice(&game_data);
+
+        self.display.clear();
     }
     fn fetch(&self) -> u16 {
         let pc = self.program_counter as usize;
@@ -168,27 +170,67 @@ impl System {
                 self.increment_program_counter();
             }
             "ADD" => {
-                self.registers[arguments[0] as usize] += self.registers[arguments[1] as usize];
-                self.increment_program_counter();
+                let x = self.registers[arguments[0] as usize] as u16;
+                let y = self.registers[arguments[1] as usize] as u16;
 
-                //TODO: impletemnt iverflow register
+                let result = x + y;
+
+                self.registers[arguments[0] as usize] = result as u8;
+
+                if result > 255 {
+                    self.registers[15] = 1;
+                } else {
+                    self.registers[15] = 0;
+                }
+
+                self.increment_program_counter();
             }
             "SUBTRACT" => {
-                self.registers[arguments[0] as usize] -= self.registers[arguments[1] as usize];
+                let x = self.registers[arguments[0] as usize];
+                let y = self.registers[arguments[1] as usize];
+
+                if y >= x {
+                    self.registers[15] = 0;
+                    self.registers[arguments[0] as usize] = y - x;
+                } else {
+                    self.registers[15] = 1;
+                    self.registers[arguments[0] as usize] = x - y;
+                }
                 self.increment_program_counter();
             }
             "SHR" => {
-                // TODO: impletemnt iverflow register
-                self.registers[arguments[0] as usize] = self.registers[arguments[0] as usize] >> 1;
+                let x = self.registers[arguments[0] as usize];
+
+                if x & 1 == 1 {
+                    self.registers[15] = 1;
+                } else {
+                    self.registers[15] = 1;
+                }
+                self.registers[arguments[0] as usize] = x >> 1;
                 self.increment_program_counter();
 
             }
             "SUBN" => {
-                // TODO: impletemnt iverflow register
-                self.registers[arguments[0] as usize] = self.registers[arguments[1] as usize] - self.registers[arguments[1] as usize];
+                let x = self.registers[arguments[0] as usize];
+                let y = self.registers[arguments[1] as usize];
+
+                if y > x {
+                    self.registers[15] = 1;
+                    self.registers[arguments[0] as usize] = x - y;
+                } else {
+                    self.registers[15] = 0;
+                    self.registers[arguments[0] as usize] = y - x;
+                }
                 self.increment_program_counter();
             }
             "SHL" => {
+                let x = self.registers[arguments[0] as usize];
+
+                if x > 127 {
+                    self.registers[15] = 1;
+                } else {
+                    self.registers[15] = 1;
+                }
                 self.registers[arguments[0] as usize] = self.registers[arguments[0] as usize] << 1;
                 self.increment_program_counter();
             }
@@ -212,50 +254,58 @@ impl System {
                 let random_number: u8 = rand::random();
 
                 self.registers[arguments[0] as usize] = random_number & arguments[1] as u8;
-                //println!("RANDOM: {}, 0: {}, 1: {}",random_number, arguments[0], arguments[1]);
                 self.increment_program_counter();
             }
             "DRAW" => {
                 let range = std::ops::Range { start: self.index_register as usize, end: (self.index_register + arguments[2]) as usize };
                 let lines = &self.memory[range];
 
-                let x = self.registers[arguments[0] as usize] +1;
-                let y = self.registers[arguments[1] as usize] +1;
+                let x = self.registers[arguments[0] as usize];
+                let y = self.registers[arguments[1] as usize];
 
-                self.display.draw(lines, x.into(), y.into());
+                let erase = self.display.draw(lines, x.into(), y.into());
+
+                if erase {
+                    self.registers[15] = 1;
+                } else {
+                    self.registers[15] = 0;
+                }
+
                 self.increment_program_counter();
             }
             "SKIP_KEY_EQ" => {
-                // TOOD setup input
-                let key = 0u8;
-                if self.registers[arguments[0] as usize] == key {
-                    self.increment_program_counter();
+                if let Some(key) = input {
+                    if self.registers[arguments[0] as usize] == key {
+                        self.increment_program_counter();
+                        self.increment_program_counter();
+                    } else {
+                        self.increment_program_counter();
+                    }
                 } else {
-                    self.increment_program_counter();
                     self.increment_program_counter();
                 }
             }
             "SKIP_KEY_NEQ" => {
-                // TOOD setup input
-                let key = 0u8;
-                if self.registers[arguments[0] as usize] != key {
-                    self.increment_program_counter();
+                if let Some(key) = input {
+                    if self.registers[arguments[0] as usize] == key {
+                        self.increment_program_counter();
+                    } else {
+                        self.increment_program_counter();
+                        self.increment_program_counter();
+                    }
                 } else {
                     self.increment_program_counter();
-                    self.increment_program_counter();
                 }
-
             }
             "LOAD_REG_DELAY" => {
                 self.registers[arguments[0] as usize] = self.delay_timer;
                 self.increment_program_counter();
             }
             "WAIT_KEY" => {
-                // TOOD setup input
-                let key = 0u8; //Wait for key
-
-                self.registers[arguments[0] as usize] = key;
-                self.increment_program_counter();
+                if let Some(key) = input {
+                    self.registers[arguments[0] as usize] = key;
+                    self.increment_program_counter();
+                }
             }
             "LOAD_DELAY_REG" => {
                 self.delay_timer = self.registers[arguments[0] as usize];
