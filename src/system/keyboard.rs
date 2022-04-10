@@ -1,4 +1,4 @@
-use std::io::{ Bytes, Read };
+use std::io::Read;
 use termion::{ AsyncReader, async_stdin };
 
 pub struct Keyboard {
@@ -31,6 +31,7 @@ impl Keyboard {
             Some(Ok(b'x')) => Some(0x0),
             Some(Ok(b'c')) => Some(0xB),
             Some(Ok(b'v')) => Some(0xF),
+            Some(Ok(b'p')) => Some(0xFF),
             _ => None
         }
     }

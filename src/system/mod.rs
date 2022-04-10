@@ -5,7 +5,7 @@ mod sprites;
 mod keyboard;
 
 use std::fs::File;
-use std::io::{ Read };
+use std::io::Read;
 use std::fmt;
 use display::Display;
 use keyboard::Keyboard;
@@ -81,12 +81,15 @@ impl System {
         self.program_counter += 2;
     }
 
-    fn execute(&mut self, instruction: instructions::Instruction, arguments: Vec<u16>) {
+    fn execute(&mut self, instruction: instructions::Instruction, arguments: Vec<u16>) -> bool {
 
-        let key = self.keyboard.get_key();
+        let input = self.keyboard.get_key();
 
-        if let Some(k) = key {
-            println!("{:?}, {:?}", arguments, instruction);
+        if let Some(quit) = input {
+            if quit == 0xFF {
+                println!("Pressing p quits the program");
+                return true;
+            }
         }
 
         match instruction.name {
@@ -308,13 +311,26 @@ impl System {
                 println!("\n{:?} fail", instruction)
             }
         }
+
+        self.display.print_registers(&self.registers);
+
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1;
+        }
+
+        if self.sound_timer > 0 {
+            self.sound_timer -= 1;
+        }
+
+        return false;
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> bool {
         let opcode = self.fetch();
         let ( instruction, arguments ) = self.decode(opcode);
 
-        self.execute(instruction, arguments);
+        // println!("{:?}{:?}", instruction, arguments);
+        self.execute(instruction, arguments)
     }
 }
 
