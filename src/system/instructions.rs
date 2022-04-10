@@ -2,7 +2,6 @@
 pub struct Argument {
     mask: u16,
     shift: u8,
-    type_name: char,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -15,9 +14,9 @@ pub struct Instruction {
 }
 
 const NO_ARGUMENTS: [Argument; 3] = [
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
+    Argument { mask: 0x0000, shift: 0 },
+    Argument { mask: 0x0000, shift: 0 },
+    Argument { mask: 0x0000, shift: 0 },
 ];
 pub const CLEAR: Instruction = Instruction {
     id: "CLS",
@@ -36,9 +35,9 @@ pub const RETURN: Instruction = Instruction {
 };
 
 const JUMP_ARGUMENTS: [Argument; 3] = [
-    Argument { mask: 0x0fff, shift: 0, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
+    Argument { mask: 0x0fff, shift: 0 },
+    Argument { mask: 0x0000, shift: 0 },
+    Argument { mask: 0x0000, shift: 0 },
 ];
 pub const JUMP: Instruction = Instruction {
     id: "JUMP_ADDR",
@@ -52,14 +51,14 @@ pub const CALL: Instruction = Instruction {
     id: "CALL_ADDR",
     name: "CALL",
     mask: 0xf000,
-    pattern: 0x1000,
+    pattern: 0x2000,
     arguments: JUMP_ARGUMENTS,
 };
 
 const LOAD_ARGUMENTS: [Argument; 3] = [
-    Argument { mask: 0x0f00, shift: 8, type_name: 'R' },
-    Argument { mask: 0x00ff, shift: 0, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
+    Argument { mask: 0x0f00, shift: 8 },
+    Argument { mask: 0x00ff, shift: 0 },
+    Argument { mask: 0x0000, shift: 0 },
 ];
 
 pub const SKIP_EQ: Instruction = Instruction {
@@ -79,9 +78,9 @@ pub const SKIP_NEQ: Instruction = Instruction {
 };
 
 const ADD_ARGUMENTS: [Argument; 3] = [
-    Argument { mask: 0x0f00, shift: 8, type_name: 'R' },
-    Argument { mask: 0x00f0, shift: 4, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
+    Argument { mask: 0x0f00, shift: 8 },
+    Argument { mask: 0x00f0, shift: 4 },
+    Argument { mask: 0x0000, shift: 0 },
 ];
 pub const SKIP_REG_EQ: Instruction = Instruction { 
     id: "SKIP_REG_EQ_VX_VY",
@@ -204,9 +203,9 @@ pub const RANDOM_REG: Instruction = Instruction {
 };
 
 const DRAW_ARGUMENTS: [Argument; 3] = [
-    Argument { mask: 0x0f00, shift: 8, type_name: 'R' },
-    Argument { mask: 0x00f0, shift: 4, type_name: 'R' },
-    Argument { mask: 0x000f, shift: 0, type_name: 'R' },
+    Argument { mask: 0x0f00, shift: 8 },
+    Argument { mask: 0x00f0, shift: 4 },
+    Argument { mask: 0x000f, shift: 0 },
 ];
 
 pub const DRAW: Instruction = Instruction { 
@@ -218,9 +217,9 @@ pub const DRAW: Instruction = Instruction {
 };
 
 const KEY_ARGUMENT: [Argument; 3] = [
-    Argument { mask: 0x0f00, shift: 8, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
-    Argument { mask: 0x0000, shift: 0, type_name: 'R' },
+    Argument { mask: 0x0f00, shift: 8 },
+    Argument { mask: 0x0000, shift: 0 },
+    Argument { mask: 0x0000, shift: 0 },
 ];
 
 pub const SKIP_KEY: Instruction =  Instruction {
